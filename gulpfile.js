@@ -13,7 +13,7 @@ var gulpif = require('gulp-if');
 var uglify = require('gulp-uglify');
 var minifyCss = require('gulp-minify-css');
 var clean = require('gulp-clean');
-var image = require('gulp-image');
+
 var cache = require('gulp-cache');
 var gulpsync = require('gulp-sync')(gulp);
 var zip = require('gulp-zip');
@@ -96,15 +96,21 @@ gulp.task('clean', function() {
 });
 
 //compress image and copy to dist/img
-gulp.task('image', function() {
-  return gulp.src('app/img/*')
-    .pipe(cache(image()))
+//gulp.task('image', function() {
+//  return gulp.src('app/img/*')
+//    .pipe(cache(image()))
+//    .pipe(gulp.dest('dist/img'));
+//});
+
+//copy images to dist/img
+gulp.task('copyimages', function() {
+  return gulp.src('app/img/**/*')
     .pipe(gulp.dest('dist/img'));
 });
 
 // copy fonts to dist
 gulp.task('copyfonts', function() {
-  return gulp.src('app/fonts//**/*.*')
+  return gulp.src('app/fonts/**/*.*')
     .pipe(gulp.dest('dist/fonts'));
 });
 
@@ -125,12 +131,11 @@ gulp.task('default', ['stylus', 'pug', 'bower', 'htmlbeautify', 'browser-sync'],
   });
 
 //comppile stylus and pug, add bower components in files and beautify html
-gulp.task('compile', gulpsync.sync(['stylus', 'pug', 'bower', 'htmlbeautify']),
-  function() {});
+gulp.task('compile', gulpsync.sync(['stylus', 'pug', 'bower', 'htmlbeautify']));
 
 
 // build project in "dist map"
-gulp.task('build', gulpsync.sync(['clean', 'image', 'copyfonts']), function() {
+gulp.task('build', gulpsync.sync(['clean', 'copyimages', 'copyfonts', 'zip']), function() {
   return gulp.src('app/*.html')
     .pipe(useref())
     .pipe(gulpif('*.js', uglify()))

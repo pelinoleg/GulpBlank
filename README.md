@@ -2,7 +2,9 @@
 Blank project on Gulp with Pug, Stylus, autoprefixer, browser-sync and other
 
 
-https://img.shields.io/github/downloads/atom/atom/total.svg
+[![GitHub forks](https://img.shields.io/github/forks/pelinoleg/GulpBlank.svg)](https://github.com/pelinoleg/GulpBlank/network)
+[![GitHub issues](https://img.shields.io/github/issues/pelinoleg/GulpBlank.svg)](https://github.com/pelinoleg/GulpBlank/issues)
+[![GitHub stars](https://img.shields.io/github/stars/pelinoleg/GulpBlank.svg)](https://github.com/pelinoleg/GulpBlank/stargazers)
 
 Установка
 -------

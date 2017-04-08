@@ -1,5 +1,3 @@
-# OS generated files #
-######################
 .DS_Store
 .DS_Store?
 .Spotlight-V100
@@ -7,6 +5,5 @@
 ehthumbs.db
 Thumbs.db
 desktop.ini
-prepros-6.config
-.gitkeep
 node_modules
+prepros-6.config

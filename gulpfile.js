@@ -6,17 +6,18 @@ var notify = require("gulp-notify");
 var autoprefixer = require('gulp-autoprefixer');
 var SourceMap = require('gulp-sourcemaps');
 var rename = require("gulp-rename");
-var htmlbeautify = require('gulp-html-beautify');
-var wiredep = require('wiredep').stream;
-var useref = require('gulp-useref');
-var gulpif = require('gulp-if');
 var uglify = require('gulp-uglify');
 var minifyCss = require('gulp-minify-css');
 var clean = require('gulp-clean');
-
+var htmlmin = require('gulp-html-minifier');
 var cache = require('gulp-cache');
 var gulpsync = require('gulp-sync')(gulp);
 var zip = require('gulp-zip');
+var concat = require('gulp-concat');
+var useref = require('gulp-useref');
+var gulpif = require('gulp-if');
+const imagemin = require('gulp-imagemin');
+const size = require('gulp-size');
 
 
 // Compile stylus,add prefixes, minify css, reload browser and notify
@@ -39,7 +40,6 @@ gulp.task('stylus', function() {
     // .pipe(notify('Stylus compiled')); // uncomment this line for "success" notify
 });
 
-
 // Компилируем Pug в HTML и перегружаем страницу
 gulp.task('pug', function() {
   return gulp.src('app/pug/*.pug') // source folder
@@ -51,31 +51,6 @@ gulp.task('pug', function() {
       stream: true
     })) // browser refresh
 });
-
-
-// подключаем стили и скрипты автоматом котоорые были установлены через bower
-// bower i --save magnific-popup
-// -save для добавления в dependencies (очень важно)
-gulp.task('bower', function() {
-  gulp.src('app/pug/includes/_head.pug')
-    .pipe(wiredep({
-      directory: "app/libs",
-      'ignorePath': '../../'
-    }))
-    .pipe(gulp.dest('app/pug/includes'));
-});
-
-
-
-// formate html
-gulp.task('htmlbeautify', function() {
-  gulp.src('app/*.html')
-    .pipe(htmlbeautify({
-      "indent_size": 4,
-    }))
-    .pipe(gulp.dest('app'))
-});
-
 
 // refresh browser
 gulp.task('browser-sync', function() {
@@ -95,51 +70,58 @@ gulp.task('clean', function() {
     .pipe(clean());
 });
 
-//compress image and copy to dist/img
-//gulp.task('image', function() {
-//  return gulp.src('app/img/*')
-//    .pipe(cache(image()))
-//    .pipe(gulp.dest('dist/img'));
-//});
+
 
 //copy images to dist/img
 gulp.task('copyimages', function() {
-  return gulp.src('app/img/**/*')
+  return gulp.src('app/img/**/*.*')
+    .pipe(cache(imagemin()))
     .pipe(gulp.dest('dist/img'));
 });
 
-// copy fonts to dist
+// copy fonts to dist/fonts
 gulp.task('copyfonts', function() {
   return gulp.src('app/fonts/**/*.*')
     .pipe(gulp.dest('dist/fonts'));
 });
 
+//copu html, css, js, change name and path with useref and copy to dist, all is minify
+gulp.task('copyhtml', function() {
+  return gulp.src('app/*.html')
+    .pipe(useref())
+    .pipe(htmlmin({
+      collapseWhitespace: true,
+      // preserveLineBreaks: true,
+      removeComments: true
+    }))
+    .pipe(gulpif('*.js', uglify()))
+    .pipe(gulpif('*.css', minifyCss()))
+    .pipe(gulp.dest('dist'));
+});
+
+
 // create archive for build (map "dist")
 gulp.task('zip', () =>
   gulp.src('dist/**/*')
   .pipe(zip('build.zip'))
+  .pipe(size({
+    showFiles: true
+  }))
   .pipe(gulp.dest('./'))
 );
 
 //запускаем все команды чтоб прошлись по файлам, потом мониторим все изменения.
-gulp.task('default', ['stylus', 'pug', 'bower', 'htmlbeautify', 'browser-sync'],
+gulp.task('default', ['stylus', 'pug', 'browser-sync'],
   function() {
     gulp.watch('app/stylus/**/*.styl', ['stylus']); //watch stylus files
     gulp.watch('app/pug/**/*.pug', ['pug']); //watch pug files
-    gulp.watch('bower.json', ['bower']); //watch if install scripts with bower
-    gulp.watch('app/*.html', ['htmlbeautify']); //watch html files and beautify
   });
 
-//comppile stylus and pug, add bower components in files and beautify html
-gulp.task('compile', gulpsync.sync(['stylus', 'pug', 'bower', 'htmlbeautify']));
+//comppile stylus and pug
+gulp.task('compile', gulpsync.sync(['stylus', 'pug']));
 
 
 // build project in "dist map"
-gulp.task('build', gulpsync.sync(['clean', 'copyimages', 'copyfonts', 'zip']), function() {
-  return gulp.src('app/*.html')
-    .pipe(useref())
-    .pipe(gulpif('*.js', uglify()))
-    .pipe(gulpif('*.css', minifyCss()))
-    .pipe(gulp.dest('dist'))
-    // .pipe(notify('malatoc'));
-});
+gulp.task('build', gulpsync.sync(['compile', 'clean', 'copyhtml', 'copyimages',
+  'copyfonts', 'zip'
+]));

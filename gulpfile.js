@@ -18,6 +18,7 @@ var useref = require('gulp-useref');
 var gulpif = require('gulp-if');
 const imagemin = require('gulp-imagemin');
 const size = require('gulp-size');
+const emitty = require('emitty').setup('app/pug', 'pug');
 
 
 // Compile stylus,add prefixes, minify css, reload browser and notify
@@ -43,12 +44,14 @@ gulp.task('stylus', function() {
 // Компилируем Pug в HTML и перегружаем страницу
 gulp.task('pug', function() {
   return gulp.src('app/pug/*.pug') // source folder
+    .pipe(gulpif(global.watch, emitty.stream()))
     .pipe(pug({
       pretty: true
     })) //compile pug
     .pipe(gulp.dest('app')) // destination folder
     .pipe(browserSync.reload({
-      stream: true
+      stream: true,
+      once: true
     })) // browser refresh
 });
 
@@ -114,6 +117,7 @@ gulp.task('zip', () =>
 gulp.task('default', ['stylus', 'pug', 'browser-sync'],
   function() {
     gulp.watch('app/stylus/**/*.styl', ['stylus']); //watch stylus files
+    global.watch = true;
     gulp.watch('app/pug/**/*.pug', ['pug']); //watch pug files
   });
 

@@ -18,7 +18,6 @@ var useref = require('gulp-useref');
 var gulpif = require('gulp-if');
 const imagemin = require('gulp-imagemin');
 const size = require('gulp-size');
-const emitty = require('emitty').setup('app/pug', 'pug');
 
 
 // Compile stylus,add prefixes, minify css, reload browser and notify
@@ -35,24 +34,23 @@ gulp.task('stylus', function() {
     .pipe(rename('style.css'))
     .pipe(SourceMap.write('.')) //Create source map
     .pipe(gulp.dest('app/css')) //destination folder
-    .pipe(browserSync.reload({
-      stream: true
-    })) // browser reload styles
+    // .pipe(browserSync.reload({
+    //   stream: true
+    // })) // browser reload styles
     // .pipe(notify('Stylus compiled')); // uncomment this line for "success" notify
 });
 
 // Компилируем Pug в HTML и перегружаем страницу
 gulp.task('pug', function() {
   return gulp.src('app/pug/*.pug') // source folder
-    .pipe(gulpif(global.watch, emitty.stream()))
     .pipe(pug({
       pretty: true
     })) //compile pug
     .pipe(gulp.dest('app')) // destination folder
-    .pipe(browserSync.reload({
-      stream: true,
-      once: true
-    })) // browser refresh
+    // .pipe(browserSync.reload({
+    //   stream: true,
+    //   once: true
+    // })) // browser refresh
 });
 
 // refresh browser
@@ -116,10 +114,21 @@ gulp.task('zip', () =>
 //запускаем все команды чтоб прошлись по файлам, потом мониторим все изменения.
 gulp.task('default', ['stylus', 'pug', 'browser-sync'],
   function() {
-    gulp.watch('app/stylus/**/*.styl', ['stylus']); //watch stylus files
-    global.watch = true;
-    gulp.watch('app/pug/**/*.pug', ['pug']); //watch pug files
+    gulp.watch('app/stylus/**/*.styl', ['stylus-watch']); //watch stylus files
+    gulp.watch('app/pug/**/*.pug', ['pug-watch']); //watch pug files
   });
+
+//tasks for relaod page after compile pug and stylus
+gulp.task('pug-watch', ['pug'], function(done) {
+  browserSync.reload();
+  done();
+});
+gulp.task('stylus-watch', ['stylus'], function(done) {
+  browserSync.reload();
+  done();
+});
+
+
 
 //comppile stylus and pug
 gulp.task('compile', gulpsync.sync(['stylus', 'pug']));
